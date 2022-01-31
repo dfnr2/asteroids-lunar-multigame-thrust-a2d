@@ -42,7 +42,7 @@
 //                header) to power the board.  Also provides 5V to the high side of
 //                The thruster potentiometer
 //
-// 28      RST    This is connected to 5V to power the device.
+// 28      RST    This is connected to ping 27 (5V) to power the device.
 //
 // 29      GND    Provides 0V to the potentiometer
 

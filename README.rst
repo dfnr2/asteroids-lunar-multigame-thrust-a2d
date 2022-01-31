@@ -1,15 +1,29 @@
 Lunar Lander thrust controller A/D adapter
 ==========================================
 
-This project uses an Arduino nano or mini pro to interface a Lunar Lander thrust contrller to the Asteroids multigame Created by Scott Brasington `Braze Technologies<https://www.brasington.org/arcade/products/adl/>`_.
+This project uses an Arduino nano or mini pro to interface a Lunar Lander thrust
+contrller to the Asteroids multigame Created by Scott Brasington `Braze
+Technologies<https://www.brasington.org/arcade/products/adl/>`_.
 
-It turns out that the nano and mini have a pinout that can directly plug into the 10-pin digital input connector on the Asteroids Multigame, so no special adapter board or cable is needed.  A cable is still needed for the potentiometer.
+It turns out that the nano and mini have a pinout that can directly plug into
+the 10-pin digital input connector on the Asteroids Multigame, so no special
+adapter board or cable is needed. A cable is still needed for the potentiometer.
 
-Because the nano and mini have the /RESET line where the multigame board provides +5V, the /RESET line must be tied to the +5V line to ensure proper operation.  This is most easily done on the potentiometer cable, avoiding the need for any board modifications.
+Because the nano and mini have the /RESET line where the multigame board
+provides +5V, the /RESET line must be tied to the +5V line to ensure proper
+operation. This is most easily done on the potentiometer cable, avoiding the
+need for any board modifications. Note that the potentiometer cable cannot be
+connected for in-circuit programming. For programming the nano over USB, the
+cable can be left in place.
+
+If the potentiometer cable is not installed, so that RESET is not connected to
++5V, then the device will still be powered through the protection diodes, and
+the device will not be damaged.
 
 Wiring:
 
-The 10-pin header connects directly from Arduino nano (or mini) pins 3-12 to the multigame 10-pin connector:
+The 10-pin header connects directly from Arduino nano (or mini) pins 3-12 to the
+multigame 10-pin connector:
 
 +---------------+--------------+
 |  Arduino Pin  |Multigame Pin |
