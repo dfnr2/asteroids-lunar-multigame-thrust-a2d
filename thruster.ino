@@ -20,6 +20,9 @@
 // You should have received a copy of the GNU General Public License along with
 // this program. If not, see <https://www.gnu.org/licenses/>.
 //
+// Source code at:
+//
+// https://github.com/dfnr2/asteroids-lunar-multigame-thrust-a2d
 
 
 // Wiring Information:
