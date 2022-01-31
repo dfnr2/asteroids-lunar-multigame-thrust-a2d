@@ -9,7 +9,7 @@ Because the nano and mini have the /RESET line where the multigame board provide
 
 Wiring:
 
- The 10-pin header connects to pins 3-12
+The 10-pin header connects to pins 3-12
 
 +---------------+--------------+
 |  Arduino Pin  |Multigame Pin |
