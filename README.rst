@@ -22,6 +22,8 @@ the device will not be damaged.
 
 Wiring:
 
+.. image: wiring.png
+
 The 10-pin header connects directly from Arduino nano (or mini) pins 3-12 to the
 multigame 10-pin connector:
 
