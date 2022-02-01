@@ -2,8 +2,7 @@ Lunar Lander thrust controller A/D adapter
 ==========================================
 
 This project uses an Arduino nano or mini pro to interface a Lunar Lander thrust
-contrller to the Asteroids multigame Created by Scott Brasington `Braze
-Technologies<https://www.brasington.org/arcade/products/adl/>`_.
+contrller to the Asteroids multigame Created by Scott Brasington (`Braze Technologies <https://www.brasington.org/arcade/products/adl/>`__)
 
 It turns out that the nano and mini have a pinout that can directly plug into
 the 10-pin digital input connector on the Asteroids Multigame, so no special
@@ -22,7 +21,10 @@ the device will not be damaged.
 
 Wiring:
 
-.. image: wiring.png
+.. image:: wiring.png
+   :scale: 50%
+   :alt: Wiring diagram for Arduino A/D interface.
+
 
 The 10-pin header connects directly from Arduino nano (or mini) pins 3-12 to the
 multigame 10-pin connector:
@@ -54,11 +56,11 @@ multigame 10-pin connector:
 4-pin Potentiometer cable:
 
 +------------+-------------------------------+
-|Arduino Pin |Connection                     |
+|Arduino Pin |Connected to:                    |
 +============+===============================+
 |26 (A7)     |Potentiometer wiper            |
 +------------+-------------------------------+
-|  27 (+5V)  |Potentiometer High side and    |
+|27 (+5V)    |Potentiometer High side and    |
 |            |also pin 28 (/RESET)           |
 +------------+-------------------------------+
 |28 (/RESET) |Pin 27 (+5V)                   |
@@ -70,6 +72,4 @@ multigame 10-pin connector:
 A simulation running the arduino software has been set up on Wokwi.com:
 
 https://wokwi.com/arduino/projects/322006068604437075
-
-The simulation also demonstrates the wiring of the potentiometer
 
