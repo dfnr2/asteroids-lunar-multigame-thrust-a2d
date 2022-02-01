@@ -28,23 +28,35 @@
 // Wiring Information:
 // Chip: ATMega328P, Arduino mini or Arduino Nano
 //
-// PIN     NAME   FUNCTION
-// 3       RST    Power connection to the 10-pin header.  RST and 5V are connected
-//                through the potentiometer cable, as shown in the simulation.
+// PIN     NAME   HEADER PIN   FUNCTION
+// 3       RST    1            Power connection to the 10-pin header.  RST and 5V are connected
+//                             through the potentiometer cable, as shown in the simulation.
 //
-// 4       GND    GND connection on the 10-pin header.
+// 4       GND    2            GND connection on the 10-pin header.
 //
-// 5-12    D2-D9  Connected to D0-D7 on the 10-pin header.
+//                             Note: The header directly maps to the pokey pins, which swaps
+//                             each pair of bits, so that each pair of bits in the header is
+//                             swapped.  So outputs D2-D9 don't correspond directly to bits 0-7
+//                             of the POKEY.  THe odd and even bits are swapped in software.
 //
-// 26      A7     Analog in.  Connected to the wiper on the thruster potentiometer
+// 5       D2     3            POKEY D1
+// 6       D3     4            POKEY D0
+// 7       D4     5            POKEY D3
+// 8       D5     6            POKEY D2
+// 9       D6     7            POKEY D5
+// 10      D7     8            POKEY D4
+// 11      D8     9            POKEY D7
+// 12      D9     10           POKEY D6
 //
-// 27      5V     Power.  Connected to RST (which is connected to +5 on the 10-pin
-//                header) to power the board.  Also provides 5V to the high side of
-//                The thruster potentiometer
+// 26      A7                  Analog in.  Connected to the wiper on the thruster potentiometer
 //
-// 28      RST    This is connected to ping 27 (5V) to power the device.
+// 27      5V                  Power.  Connected to pin 28 (RST) (which is connected to pin 1 (+5)
+//                             on the 10-pin header) to power the board.  Also provides 5V to the
+//                             high side of the thruster potentiometer.
 //
-// 29      GND    Provides 0V to the potentiometer
+// 28      RST                 This is connected to pin 27 (5V) to power the device.
+//
+// 29      GND                 Provides 0V to the potentiometer
 
 #include <stdint.h>
 #include <EEPROM.h>
@@ -99,8 +111,16 @@ void setup() {
 
 void out_byte(uint8_t byte)
 {
-    uint8_t lo_part = LOBITS(byte);
-    uint8_t hi_part = HIBITS(byte);
+
+    // swap each pair of bits to match POKEY:
+    // D7:D0 <- D6 D7, D4, D5, D2, D3, D0, D1
+    uint8_t odd_bits = (byte & 0x55) << 1;
+    uint8_t even_bits = (byte & 0xaa) >> 1;
+
+    uint8_t swapped_byte = odd_bits | even_bits;
+
+    uint8_t lo_part = LOBITS(swapped_byte);
+    uint8_t hi_part = HIBITS(swapped_byte);
 
     PORTD = lo_part;
     PORTB = hi_part;
