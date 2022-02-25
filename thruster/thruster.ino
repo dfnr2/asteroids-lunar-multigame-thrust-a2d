@@ -73,8 +73,26 @@
 
 // Uncomment only one of the following two lines to configure for arduino nano
 // or mini pro:
-uint16_t thrust_pin = A3; // uncomment this line for arduino mini pro
-// uint16_t thrust_pin = A7; // uncomment this line for arduino nano
+//#define NANO 1
+#define MINIPRO 1
+
+#if defined(NANO)
+#  define THRUST_PIN_DEF A7
+#  define EEPROM_CLEAR_1_DEF A4
+#  define EEPROM_CLEAR_2_DEF A5
+#elif defined(MINIPRO)
+#  define THRUST_PIN_DEF A3
+#  define EEPROM_CLEAR_1_DEF A0
+#  define EEPROM_CLEAR_2_DEF A1
+#else
+#  error No board selected
+#endif
+
+const uint16_t thrust_pin = THRUST_PIN_DEF;
+const uint16_t eeprom_clear1 = EEPROM_CLEAR_1_DEF;
+const uint16_t eeprom_clear2 = EEPROM_CLEAR_2_DEF;
+const uint8_t reset_blink_delay = 200; // msec
+const uint8_t num_blinks_on_eeprom_clear = 4;
 
 // The high 2 bits of the output byte map to PORTD1:2
 // So shift right 6 bits
@@ -89,74 +107,106 @@ const uint8_t lomask = 0x3f;
 // 10-bit A/D range
 const uint16_t analog_min = 0;
 const uint16_t analog_max = 1023;
-
+const uint16_t analog_middle = ((uint16_t) (((uint32_t) analog_max + (uint32_t) analog_min) / 2));
 // From Scott Brasington, the range should be 104-167 (0x68 - 0xa7)
 const uint8_t min_thrust = 0x68;
 const uint8_t max_thrust = 0xa7;
 
 // eeprom addresses to store low and high values
 uint16_t lo_val_addr = 0;
-uint16_t hi_val_addr = lo_val_addr+sizeof(uint16_t);
+uint16_t hi_val_addr = lo_val_addr + sizeof(uint16_t);
 
 // The lowest and hightest values.  Initialize to 0 at time of programming.
-uint16_t lo_val = 0;
-uint16_t hi_val = 0;
+uint16_t lo_adc_val = analog_middle;
+uint16_t hi_adc_val = analog_middle;
+
+void blink_led(void)
+{
+  pinMode(LED_BUILTIN, OUTPUT);
+
+  for (uint8_t i = 0; i < num_blinks_on_eeprom_clear; i++) {
+    digitalWrite(LED_BUILTIN, HIGH);
+    delay(reset_blink_delay);
+    digitalWrite(LED_BUILTIN, LOW);
+    delay(reset_blink_delay);
+  }
+}
 
 void setup() {
-    // Retrieve the high and low values from EEPROM.
-    lo_val = EEPROM.read(lo_val_addr);
-    hi_val = EEPROM.read(hi_val_addr);
+  uint8_t eeprom_reset_request = 0;
 
-    // If both are equal (from being freshly programmed), then initialize both
-    // to guarantee that both will be set as the thruster is used through its
-    // range.
-    if (lo_val == hi_val) {
-        lo_val = analog_max;
-        hi_val = 0;
-        EEPROM.put(lo_val_addr, lo_val);
-        EEPROM.put(hi_val_addr, hi_val);
-    }
+  // Check if EEPROM reset is requested. Make sure the two EEPROM_CLEAR pins are
+  // connected by testing that values written to the eeprom_clear1 pin are read
+  // back on the eeprom_clear2 pin:
 
-    // Set up digital registers;
-    DDRD = LOBITS(0xff);
-    DDRB = HIBITS(0xff);
+  pinMode(eeprom_clear1, OUTPUT);
+  pinMode(eeprom_clear2, INPUT_PULLUP);
+  digitalWrite(eeprom_clear1, HIGH);
+  eeprom_reset_request = digitalRead(eeprom_clear2);
+  digitalWrite(eeprom_clear1, LOW);
+  eeprom_reset_request &= !digitalRead(eeprom_clear2);
+
+  // Retrieve the high and low values stored in EEPROM.
+
+  lo_adc_val = EEPROM.read(lo_val_addr);
+  hi_adc_val = EEPROM.read(hi_val_addr);
+
+  // If the maximum are equal (e.g., a new or freshly programmed device), then
+  // initialize both to guarantee that both will be set as the thruster is used
+  // through its range.
+  //
+  // Also, if an EEPROM clear is requested, by connecting the EEPROM_CLEAR1 and
+  // EEPROM_CLEAR2 pins, then re-initialize the high and low adc values.
+  if (eeprom_reset_request || (lo_adc_val == hi_adc_val)) {
+    lo_adc_val = analog_middle;
+    hi_adc_val = analog_middle;
+    EEPROM.put(lo_val_addr, lo_adc_val);
+    EEPROM.put(hi_val_addr, hi_adc_val);
+
+    // indicate EEPROM reset by blinking LEDS
+    blink_led();
+  }
+  // Set up digital registers;
+  DDRD = LOBITS(0xff);
+  DDRB = HIBITS(0xff);
 }
+
 
 void out_byte(uint8_t byte)
 {
 
-    // swap each pair of bits to match POKEY:
-    // D7:D0 <- D6 D7, D4, D5, D2, D3, D0, D1
-    uint8_t odd_bits = (byte & 0x55) << 1;
-    uint8_t even_bits = (byte & 0xaa) >> 1;
+  // swap each pair of bits to match POKEY:
+  // D7:D0 <- D6 D7, D4, D5, D2, D3, D0, D1
+  uint8_t odd_bits = (byte & 0x55) << 1;
+  uint8_t even_bits = (byte & 0xaa) >> 1;
 
-    uint8_t swapped_byte = odd_bits | even_bits;
+  uint8_t swapped_byte = odd_bits | even_bits;
 
-    uint8_t lo_part = LOBITS(swapped_byte);
-    uint8_t hi_part = HIBITS(swapped_byte);
+  uint8_t lo_part = LOBITS(swapped_byte);
+  uint8_t hi_part = HIBITS(swapped_byte);
 
-    PORTD = lo_part;
-    PORTB = hi_part;
+  PORTD = lo_part;
+  PORTB = hi_part;
 }
 
-void store_hi_lo_val(uint8_t val)
+void store_hi_lo_val(uint16_t val)
 {
-    if (val < lo_val) {
-        lo_val = val;
-        EEPROM.put(lo_val_addr, lo_val);
-    } else if (val > hi_val) {
-        hi_val = val;
-        EEPROM.put(lo_val_addr, hi_val);
-    }
+  if (val < lo_adc_val) {
+    lo_adc_val = val;
+    EEPROM.put(lo_val_addr, lo_adc_val);
+  } else if (val > hi_adc_val) {
+    hi_adc_val = val;
+    EEPROM.put(hi_val_addr, hi_adc_val);
+  }
 }
 
 void loop() {
-    uint16_t val = analogRead(thrust_pin);  // read the input pin
+  uint16_t val = analogRead(thrust_pin);  // read the input pin
 
-    uint8_t thruster_out = map(val, analog_min, analog_max,
-                               min_thrust, max_thrust);
+  store_hi_lo_val(val);
 
-    store_hi_lo_val(val);
+  uint8_t thruster_out = map(val, lo_adc_val, hi_adc_val,
+                             min_thrust, max_thrust);
 
-    out_byte(thruster_out);
+  out_byte(thruster_out);
 }
