@@ -48,7 +48,17 @@
 // 11      D8     9            POKEY D7
 // 12      D9     10           POKEY D6
 //
-// 26      A7                  Analog in.  Connected to the wiper on the thruster potentiometer
+//         On the arduino nano, the A7 pin is adjacent to the +5 pin. On the
+//         mini pro, the A3 pin is adjacent to the +5 pin. Using A7 on the nano
+//         and A3 on the mini pro permits a simple 4-pin connector to the
+//         potentiometer, with the RESET and +5 pins both soldered to the high
+//         side lug of the potentiometer.
+
+// 22      A7                  Analog in (nano) Connected to the wiper on the
+//                             thruster potentiometer
+//
+// 26      A3                  Analog in.(mini pro) Connected to the wiper on
+//                             the thruster potentiometer
 //
 // 27      5V                  Power.  Connected to pin 28 (RST) (which is connected to pin 1 (+5)
 //                             on the 10-pin header) to power the board.  Also provides 5V to the
@@ -61,7 +71,10 @@
 #include <stdint.h>
 #include <EEPROM.h>
 
-uint16_t thrust_pin = A7;
+// Uncomment only one of the following two lines to configure for arduino nano
+// or mini pro:
+uint16_t thrust_pin = A3; // uncomment this line for arduino mini pro
+// uint16_t thrust_pin = A7; // uncomment this line for arduino nano
 
 // The high 2 bits of the output byte map to PORTD1:2
 // So shift right 6 bits
