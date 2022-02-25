@@ -56,7 +56,7 @@ multigame 10-pin connector:
 4-pin Potentiometer cable:
 
 +------------+-------------------------------+
-|Arduino Pin |Connected to:                    |
+|Arduino Pin |Connected to:                  |
 +============+===============================+
 |26 (A7)     |Potentiometer wiper            |
 +------------+-------------------------------+
