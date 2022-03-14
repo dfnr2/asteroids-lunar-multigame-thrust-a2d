@@ -144,12 +144,13 @@ void setup() {
   digitalWrite(eeprom_clear1, HIGH);
   eeprom_reset_request = digitalRead(eeprom_clear2);
   digitalWrite(eeprom_clear1, LOW);
-  eeprom_reset_request &= !digitalRead(eeprom_clear2);
+  eeprom_reset_request = eeprom_reset_request && !digitalRead(eeprom_clear2);
 
   // Retrieve the high and low values stored in EEPROM.
 
-  lo_adc_val = EEPROM.read(lo_val_addr);
-  hi_adc_val = EEPROM.read(hi_val_addr);
+  EEPROM.get(lo_val_addr, lo_adc_val);
+  EEPROM.get(hi_val_addr, hi_adc_val);
+
 
   // If the maximum are equal (e.g., a new or freshly programmed device), then
   // initialize both to guarantee that both will be set as the thruster is used
