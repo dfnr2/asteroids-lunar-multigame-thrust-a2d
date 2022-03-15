@@ -219,9 +219,9 @@ void setup() {
   EEPROM.get(hi_val_addr, hi_adc_val);
 
 
-  // If the maximum are equal (e.g., a new or freshly programmed device), then
-  // initialize both to guarantee that both will be set as the thruster is used
-  // through its range.
+  // If the maximum ane minimum ADC values stored in EEPROM are equal (e.g., a
+  // new or freshly programmed device), then initialize both to guarantee that
+  // both will be set as the thruster is used through its range.
   //
   // Also, if an EEPROM clear is requested, by connecting the EEPROM_CLEAR1 and
   // EEPROM_CLEAR2 pins, then re-initialize the high and low adc values.
