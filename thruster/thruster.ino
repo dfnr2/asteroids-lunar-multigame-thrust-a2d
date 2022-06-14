@@ -140,8 +140,8 @@
 
 // Uncomment only one of the following two lines to configure for arduino nano
 // or mini pro:
-//#define NANO 1
-#define MINIPRO 1
+#define NANO 1
+//#define MINIPRO 1
 
 #if defined(NANO)
 #  define THRUST_PIN_DEF A7
@@ -187,6 +187,20 @@ uint16_t hi_val_addr = lo_val_addr + sizeof(uint16_t);
 uint16_t lo_adc_val = analog_middle;
 uint16_t hi_adc_val = analog_middle;
 
+
+
+// PROCEDURE:
+// INPUTS:
+// OUTPUTS:
+//
+// DESCRIPTION:
+//
+// SIDE EFFECTS:
+//
+// NOTES:
+//
+// COMPLEXITY:
+
 void blink_led(void)
 {
   pinMode(LED_BUILTIN, OUTPUT);
@@ -199,6 +213,70 @@ void blink_led(void)
   }
 }
 
+// PROCEDURE: eeprom_jumper_shorted
+// INPUTS: none
+// OUTPUTS: returns uint8_t, a boolean value that is true if the EEPROM jumper is shorted.
+//
+// DESCRIPTION: See above
+//
+// SIDE EFFECTS: None
+//
+// COMPLEXITY: 1
+
+uint8_t eeprom_jumper_shorted(void)
+{
+  uint8_t jumper_shorted = 0;
+
+  digitalWrite(eeprom_clear1, HIGH);
+  jumper_shorted = digitalRead(eeprom_clear2);
+
+  digitalWrite(eeprom_clear1, LOW);
+  return jumper_shorted && !digitalRead(eeprom_clear2);
+}
+
+// PROCEDURE: eeprom_reset_request
+// INPUTS: none
+// OUTPUTS: returns uint8_t, a boolean value that is true if the EEPROM reset
+// condition was met (jumper shorted and removed)
+//
+// DESCRIPTION: see above
+//
+// SIDE EFFECTS: If jumper is shorted, this routine delays until the jumper
+// is removed.  This is done to prevent a useless repetitive cycle of
+// detecting the jumper and resetting the EEPROM.
+//
+// NOTES: See SIDE EFFECTS
+//
+// COMPLEXITY: 2
+
+uint8_t eeprom_reset_request(void)
+{
+  uint8_t reset_request = 0;
+
+
+  // If the eeprom reset jumper is shorted, then wait until the short
+  // is removed, since if left in place, the adc value will repeatedly
+  // be written to EEPROM, serving no useful function, and shortening
+  // the EEPROM life.
+  while (eeprom_jumper_shorted()) {
+    reset_request = 1;
+    // visually indicate the reset request
+    blink_led();
+  }
+  return reset_request;
+}
+
+
+// PROCEDURE: setup
+// INPUTS: none
+// OUTPUTS: none
+//
+// DESCRIPTION: Sets up the I/O pins and initial variable values
+//
+// SIDE EFFECTS: See above
+//
+// COMPLEXITY:  1
+
 void setup() {
   uint8_t eeprom_reset_request = 0;
 
@@ -208,41 +286,33 @@ void setup() {
 
   pinMode(eeprom_clear1, OUTPUT);
   pinMode(eeprom_clear2, INPUT_PULLUP);
-  digitalWrite(eeprom_clear1, HIGH);
-  eeprom_reset_request = digitalRead(eeprom_clear2);
-  digitalWrite(eeprom_clear1, LOW);
-  eeprom_reset_request = eeprom_reset_request && !digitalRead(eeprom_clear2);
+
+  // Set up digital registers;
+  DDRD = LOBITS(0xff);
+  DDRB = HIBITS(0xff);
 
   // Retrieve the high and low values stored in EEPROM.
 
   EEPROM.get(lo_val_addr, lo_adc_val);
   EEPROM.get(hi_val_addr, hi_adc_val);
-
-
-  // If the maximum ane minimum ADC values stored in EEPROM are equal (e.g., a
-  // new or freshly programmed device), then initialize both to guarantee that
-  // both will be set as the thruster is used through its range.
-  //
-  // Also, if an EEPROM clear is requested, by connecting the EEPROM_CLEAR1 and
-  // EEPROM_CLEAR2 pins, then re-initialize the high and low adc values.
-  if (eeprom_reset_request || (lo_adc_val == hi_adc_val)) {
-    lo_adc_val = analog_middle;
-    hi_adc_val = analog_middle;
-    EEPROM.put(lo_val_addr, lo_adc_val);
-    EEPROM.put(hi_val_addr, hi_adc_val);
-
-    // indicate EEPROM reset by blinking LEDS
-    blink_led();
-  }
-  // Set up digital registers;
-  DDRD = LOBITS(0xff);
-  DDRB = HIBITS(0xff);
 }
 
 
+// PROCEDURE: out_byte
+// INPUTS: uint8_t byte: The byte to be output to the Asteroids Multigame.
+// OUTPUTS: none
+//
+// DESCRIPTION: Takes a byte value to be send to the multigame and re-orders
+// the bits to match the wiring of the POKEY chip.
+//
+// SIDE EFFECTS: Changes output port logic levels.
+//
+// NOTES:
+//
+// COMPLEXITY: 1
+
 void out_byte(uint8_t byte)
 {
-
   // swap each pair of bits to match POKEY:
   // D7:D0 <- D6 D7, D4, D5, D2, D3, D0, D1
   uint8_t odd_bits = (byte & 0x55) << 1;
@@ -257,6 +327,25 @@ void out_byte(uint8_t byte)
   PORTB = hi_part;
 }
 
+
+// PROCEDURE: store_hi_lo_val
+// INPUTS: uint16_t val: A 16-bit DAC readout value
+// OUTPUTS: none
+//
+// DESCRIPTION: Given a DAC reading, test whether the reading is higher or
+// lower than the current high/low boundary values.  If so, set the new
+// boundary (high or low) to the current reading.
+//
+// SIDE EFFECTS: May modify high and low boundary values for the thruster
+//
+// NOTES: Once the full range has been exercised, the correct high and low
+// values are known. The entire range of ADC values produced by the thruster can
+// then be mapped to the range of values expected by the multigame. This results
+// in automatic calibration of thruster that is tolerant to different
+// potentiometer values and mounting positions.
+//
+// COMPLEXITY: 3
+
 void store_hi_lo_val(uint16_t val)
 {
   if (val < lo_adc_val) {
@@ -268,13 +357,53 @@ void store_hi_lo_val(uint16_t val)
   }
 }
 
-void loop() {
-  uint16_t val = analogRead(thrust_pin);  // read the input pin
+// PROCEDURE: loop
+// INPUTS: none
+// OUTPUTS: none
+//
+// DESCRIPTION: main loop. Each pass through the loop:
+// - Test if EEPROM clear condition is met, and clear the EEPROM if so.
+// - Read the current ADC value.
+// - Map the ADC value to the range of values expected by the Multigame.
+// - Output the mapped thruster position to the Multigame port.
+//
+// SIDE EFFECTS: See above
+//
+// COMPLEXITY: 2
 
-  store_hi_lo_val(val);
+void loop(void) {
 
-  uint8_t thruster_out = map(val, lo_adc_val, hi_adc_val,
+  // read the thruster every pass through the loop.
+  uint16_t thrust_val = analogRead(thrust_pin);  // read the input pin
+
+  // Reset the EEPROM by storing the current ADC reading as both hi and lo values
+  // if either:
+  //
+  // 1) The maximum ane minimum ADC values stored in EEPROM are equal to 0 (e.g., a
+  //    new or freshly programmed device), then initialize both to guarantee that
+  //    both will be set as the thruster is used through its range.
+  //
+  // 2) An EEPROM clear is requested, by connecting the EEPROM_CLEAR1 and
+  //    EEPROM_CLEAR2 pins.
+
+  if (eeprom_reset_request() || !(lo_adc_val | hi_adc_val)) {
+    lo_adc_val = thrust_val;
+    hi_adc_val = thrust_val;
+    EEPROM.put(hi_val_addr, hi_adc_val);
+    EEPROM.put(lo_val_addr, lo_adc_val);
+
+    // indicate EEPROM reset by blinking LEDS
+    blink_led();
+  } else {
+    // Otherwise adjust the boundary values if the current thrust vale falls
+    // outside the current bounds.
+    store_hi_lo_val(thrust_val);
+  }
+  uint8_t thruster_out = map(thrust_val, lo_adc_val, hi_adc_val,
                              min_thrust, max_thrust);
 
   out_byte(thruster_out);
 }
+/*-------|---------|---------+---------+---------+---------+---------+---------+
+ * Above line is 80 columns, and should display completely in editor.
+ */
