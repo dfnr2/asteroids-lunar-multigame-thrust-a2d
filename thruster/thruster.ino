@@ -351,17 +351,10 @@ void loop(void) {
   // read the thruster every pass through the loop.
   uint16_t thrust_val = analogRead(thrust_pin);  // read the input pin
 
-  // Reset the EEPROM by storing the current ADC reading as both hi and lo values
-  // if either:
-  //
-  // 1) The maximum ane minimum ADC values stored in EEPROM are equal to 0 (e.g., a
-  //    new or freshly programmed device), then initialize both to guarantee that
-  //    both will be set as the thruster is used through its range.
-  //
-  // 2) An EEPROM clear is requested, by connecting the EEPROM_CLEAR1 and
-  //    EEPROM_CLEAR2 pins.
+  // When an EEPROM clear is requested, by connecting the EEPROM_CLEAR1 and
+  // EEPROM_CLEAR2 pins, reset the EEPROM by storing the current ADC reading as both hi and lo values.
 
-  if (eeprom_reset_request() || !(lo_adc_val | hi_adc_val)) {
+  if (eeprom_reset_request()) {
     lo_adc_val = thrust_val;
     hi_adc_val = thrust_val;
     EEPROM.put(hi_val_addr, hi_adc_val);
