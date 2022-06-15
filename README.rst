@@ -8,12 +8,26 @@ It turns out that the nano and mini have a pinout that can directly plug into
 the 10-pin digital input connector on the Asteroids Multigame, so no special
 adapter board or cable is needed. A cable is still needed for the potentiometer.
 
+This adapter can work with almost any potentiometer value, and almost any
+positioning of the potentiometer. The firmware will calibrate the analog values
+read from the potentiometer and map those values to the recommended range of
+values for the Lunar Landar game. To calibrate the thruster, simply short the
+two "calibration" I/O pins momentarily, then move the thruster through its range
+of motion. The highest and lowest values will automatically be stored in EEPROM,
+and will be mapped to the expected high/low thruster values until another
+calibration is performed, if ever. I suggest mounting a calibration switch near
+the thruster, and connecting it to the calibration pins using a cable.
+
 Because the nano and mini have the /RESET line where the multigame board
 provides +5V, the /RESET line must be tied to the +5V line to ensure proper
 operation. This is most easily done on the potentiometer cable, avoiding the
 need for any board modifications. Note that the potentiometer cable cannot be
 connected for in-circuit programming. For programming the nano over USB, the
 cable can be left in place.
+
+As a side note, since +5 and ~RESET are tied together when the potentiometer is
+connected, it is a good idea to remove the RESET pushbutton, to avoid
+accidentally shorting +5 to GND.
 
 If the potentiometer cable is not installed, so that RESET is not connected to
 +5V, then the device will still be powered through the protection diodes, and
@@ -60,14 +74,12 @@ multigame 10-pin connector:
 +============+===============================+
 |26 (A7)     |Potentiometer wiper            |
 +------------+-------------------------------+
-|27 (+5V)    |Potentiometer High side and    |
-|            |also pin 28 (/RESET)           |
+|27 (+5V)    |Potentiometer High side        |
 +------------+-------------------------------+
-|28 (/RESET) |Pin 27 (+5V)                   |
+|28 (/RESET) |Potentiometer High side        |
 +------------+-------------------------------+
 |29 (GND)    |Potentiometer Low side         |
 +------------+-------------------------------+
-
 
 A simulation running the arduino software has been set up on Wokwi.com:
 
