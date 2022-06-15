@@ -158,8 +158,6 @@
 const uint16_t thrust_pin = THRUST_PIN_DEF;
 const uint16_t eeprom_clear1 = EEPROM_CLEAR_1_DEF;
 const uint16_t eeprom_clear2 = EEPROM_CLEAR_2_DEF;
-const uint8_t reset_blink_delay = 200; // msec
-const uint8_t num_blinks_on_eeprom_clear = 4;
 
 // The high 2 bits of the output byte map to PORTD1:2
 // So shift right 6 bits
@@ -188,30 +186,6 @@ uint16_t lo_adc_val = analog_middle;
 uint16_t hi_adc_val = analog_middle;
 
 
-
-// PROCEDURE:
-// INPUTS:
-// OUTPUTS:
-//
-// DESCRIPTION:
-//
-// SIDE EFFECTS:
-//
-// NOTES:
-//
-// COMPLEXITY:
-
-void blink_led(void)
-{
-  pinMode(LED_BUILTIN, OUTPUT);
-
-  for (uint8_t i = 0; i < num_blinks_on_eeprom_clear; i++) {
-    digitalWrite(LED_BUILTIN, HIGH);
-    delay(reset_blink_delay);
-    digitalWrite(LED_BUILTIN, LOW);
-    delay(reset_blink_delay);
-  }
-}
 
 // PROCEDURE: eeprom_jumper_shorted
 // INPUTS: none
@@ -261,8 +235,9 @@ uint8_t eeprom_reset_request(void)
   while (eeprom_jumper_shorted()) {
     reset_request = 1;
     // visually indicate the reset request
-    blink_led();
+    digitalWrite(LED_BUILTIN, HIGH);
   }
+  digitalWrite(LED_BUILTIN, LOW);
   return reset_request;
 }
 
@@ -392,8 +367,6 @@ void loop(void) {
     EEPROM.put(hi_val_addr, hi_adc_val);
     EEPROM.put(lo_val_addr, lo_adc_val);
 
-    // indicate EEPROM reset by blinking LEDS
-    blink_led();
   } else {
     // Otherwise adjust the boundary values if the current thrust vale falls
     // outside the current bounds.
@@ -404,6 +377,6 @@ void loop(void) {
 
   out_byte(thruster_out);
 }
-/*-------|---------|---------+---------+---------+---------+---------+---------+
- * Above line is 80 columns, and should display completely in editor.
- */
+//-------|---------|---------+---------+---------+---------+---------+---------+
+// Above line is 80 columns, and should display completely in editor.
+//
