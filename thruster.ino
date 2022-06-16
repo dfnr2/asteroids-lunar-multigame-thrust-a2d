@@ -174,7 +174,7 @@ const uint8_t lomask = 0x3f;
 // 10-bit A/D range
 const uint16_t analog_min = 0;
 const uint16_t analog_max = 1023;
-const uint16_t analog_middle = ((uint16_t) (((uint32_t) analog_max + (uint32_t) analog_min) / 2));
+
 // From Scott Brasington, the range should be 104-167 (0x68 - 0xa7)
 const uint8_t min_thrust = 0x68;
 const uint8_t max_thrust = 0xa7;
@@ -182,11 +182,6 @@ const uint8_t max_thrust = 0xa7;
 // eeprom addresses to store low and high values
 uint16_t lo_val_addr = 0;
 uint16_t hi_val_addr = lo_val_addr + sizeof(uint16_t);
-
-// The lowest and hightest values.  Initialize to 0 at time of programming.
-uint16_t lo_adc_val = analog_middle;
-uint16_t hi_adc_val = analog_middle;
-
 
 
 // PROCEDURE: eeprom_jumper_shorted
