@@ -88,12 +88,12 @@
 //                     C1   | [ ]A1      /  A  \      D8[+] |   B0---------|9     |
 //                     C2   | [ ]A2      \  N  /      D7[+] |   D7---------|8     |
 //                     C3   | [ ]A3       \_0_/       D6[+]~|   D6---------|7     |
-//                          | [ ]A4/SDA               D5[+]~|   D5---------|6     |
-//       Calibrate Sw. 1 ---| [*]A5/SCL               D4[+] |   D4---------|5     |
-//       Calibrate Sw. 2 ---| [*]A6              INT1/D3[+]~|   D3---------|4     |
+//       Calibrate Sw. 1 ---| [ ]A4/SDA               D5[+]~|   D5---------|6     |
+//       Calibrate Sw. 2 ---| [*]A5/SCL               D4[+] |   D4---------|5     |
+//                          | [*]A6/~RESET       INT1/D3[+]~|   D3---------|4     |
 //       pot-wiper ---------| [+]A7              INT0/D2[+] |   D2---------|3     |
 //       pot-HI ------------| [+]5V                  GND[+] |     ---------|2     |
-//       pot-HI ------------| [+]RST                 RST[+] |   C6---------|1     |
+//       pot-HI ------------| [+]~RESET           ~RESET[+] |   C6---------|1     |
 //       pot-LO ------------| [+]GND   5V MOSI GND   TX1[ ] |   D0         +------+
 //                          | [ ]Vin   [ ] [ ] [ ]   RX1[ ] |   D1
 //                          |          [ ] [ ] [ ]          |
@@ -102,11 +102,11 @@
 //                          +-------------------------------+
 //
 //    Notes:
-//      1)  '+': Pin is connected
-//      2)  '*': Momentarily short these pins to calibrate the potentiometer, e.g.,
-//           with a pushbutton switch
-//      3)  Note, RST and POT-HI are both connected to the pot 5V terminal
-//
+//      1) '+': Pin is connected
+//      2) '*': Momentarily short these pins to calibrate the potentiometer, e.g.,
+//         with a pushbutton switch
+//      3) RST and POT-HI are both connected to the pot 5V terminal
+//      4) Can't use A6 for I/O because it's also /RESET.
 //
 // Arduino Mini Pro pinout:
 //
@@ -147,19 +147,19 @@
 
 #if defined(NANO)
 #  define THRUST_PIN_DEF A7
-#  define EEPROM_CLEAR_1_DEF A5
-#  define EEPROM_CLEAR_2_DEF A6
+#  define CAL_BUTTON_1_DEF A4
+#  define CAL_BUTTON_2_DEF A5
 #elif defined(MINIPRO)
 #  define THRUST_PIN_DEF A3
-#  define EEPROM_CLEAR_1_DEF A1
-#  define EEPROM_CLEAR_2_DEF A2
+#  define CAL_BUTTON_1_DEF A1
+#  define CAL_BUTTON_2_DEF A2
 #else
 #  error No board selected
 #endif
 
 const uint16_t thrust_pin = THRUST_PIN_DEF;
-const uint16_t eeprom_clear1 = EEPROM_CLEAR_1_DEF;
-const uint16_t eeprom_clear2 = EEPROM_CLEAR_2_DEF;
+const uint16_t cal_button1 = CAL_BUTTON_1_DEF;
+const uint16_t cal_button2 = CAL_BUTTON_2_DEF;
 
 // The high 2 bits of the output byte map to PORTD1:2
 // So shift right 6 bits
@@ -183,8 +183,11 @@ const uint8_t max_thrust = 0xa7;
 uint16_t lo_val_addr = 0;
 uint16_t hi_val_addr = lo_val_addr + sizeof(uint16_t);
 
+// high and low ADC values are meaningful only after calibration.
+uint16_t lo_adc_val;
+uint16_t hi_adc_val;
 
-// PROCEDURE: eeprom_jumper_shorted
+// PROCEDURE: cal_sw_pressed
 // INPUTS: none
 // OUTPUTS: returns uint8_t, a boolean value that is true if the EEPROM jumper is shorted.
 //
@@ -194,18 +197,18 @@ uint16_t hi_val_addr = lo_val_addr + sizeof(uint16_t);
 //
 // COMPLEXITY: 1
 
-uint8_t eeprom_jumper_shorted(void)
+uint8_t cal_sw_pressed(void)
 {
   uint8_t jumper_shorted = 0;
 
-  digitalWrite(eeprom_clear1, HIGH);
-  jumper_shorted = digitalRead(eeprom_clear2);
+  digitalWrite(cal_button1, HIGH);
+  jumper_shorted = digitalRead(cal_button2);
 
-  digitalWrite(eeprom_clear1, LOW);
-  return jumper_shorted && !digitalRead(eeprom_clear2);
+  digitalWrite(cal_button1, LOW);
+  return jumper_shorted && !digitalRead(cal_button2);
 }
 
-// PROCEDURE: eeprom_reset_request
+// PROCEDURE: calibration_request
 // INPUTS: none
 // OUTPUTS: returns uint8_t, a boolean value that is true if the EEPROM reset
 // condition was met (jumper shorted and removed)
@@ -220,7 +223,7 @@ uint8_t eeprom_jumper_shorted(void)
 //
 // COMPLEXITY: 2
 
-uint8_t eeprom_reset_request(void)
+uint8_t calibration_request(void)
 {
   uint8_t reset_request = 0;
 
@@ -229,7 +232,7 @@ uint8_t eeprom_reset_request(void)
   // is removed, since if left in place, the adc value will repeatedly
   // be written to EEPROM, serving no useful function, and shortening
   // the EEPROM life.
-  while (eeprom_jumper_shorted()) {
+  while (cal_sw_pressed()) {
     reset_request = 1;
     // visually indicate the reset request
     digitalWrite(LED_BUILTIN, HIGH);
@@ -250,14 +253,12 @@ uint8_t eeprom_reset_request(void)
 // COMPLEXITY:  1
 
 void setup() {
-  uint8_t eeprom_reset_request = 0;
+  // Check if EEPROM reset is requested. Make sure the two CAL_BUTTON pins are
+  // connected by testing that values written to the cal_button1 pin are read
+  // back on the cal_button2 pin:
 
-  // Check if EEPROM reset is requested. Make sure the two EEPROM_CLEAR pins are
-  // connected by testing that values written to the eeprom_clear1 pin are read
-  // back on the eeprom_clear2 pin:
-
-  pinMode(eeprom_clear1, OUTPUT);
-  pinMode(eeprom_clear2, INPUT_PULLUP);
+  pinMode(cal_button1, OUTPUT);
+  pinMode(cal_button2, INPUT_PULLUP);
 
   // Set up digital registers;
   DDRD = LOBITS(0xff);
@@ -348,10 +349,11 @@ void loop(void) {
   // read the thruster every pass through the loop.
   uint16_t thrust_val = analogRead(thrust_pin);  // read the input pin
 
-  // When an EEPROM clear is requested, by connecting the EEPROM_CLEAR1 and
-  // EEPROM_CLEAR2 pins, reset the EEPROM by storing the current ADC reading as both hi and lo values.
+  // When an EEPROM clear is requested, by connecting the CAL_BUTTON1 and
+  // CAL_BUTTON2 pins, reset the EEPROM by storing the current ADC reading as
+  // both hi and lo values.
 
-  if (eeprom_reset_request()) {
+  if (calibration_request()) {
     lo_adc_val = thrust_val;
     hi_adc_val = thrust_val;
     EEPROM.put(hi_val_addr, hi_adc_val);
