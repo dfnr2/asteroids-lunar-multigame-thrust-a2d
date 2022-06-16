@@ -60,18 +60,18 @@
 // 22      ADC7                Analog in.(mini pro) Connected to the wiper on
 //                             the thruster potentiometer
 //
-// 28      C5                  EEPROM_CLEAR2: (input)
-// 27      C4                  EEPROM_CLEAR1: (output)
-//                             EEPROM is cleared if these lines are shorted at startup
+// 29      C6                  Calibrate SW. 2: (input)
+// 28      C5                  Calibrate SW. 2: (output)
+//                             momentarily shorting these pins commences calibration
 // ***********************************************************************************
 //
 // **************** The following pins are used for the Mini Pro *********************
 // 26      C3                  Analog in.(mini pro) Connected to the wiper on
 //                             the thruster potentiometer
 //
-// 24      C1                  EEPROM_CLEAR2: (input)
-// 23      C0                  EEPROM_CLEAR1: (output)
-//                             EEPROM is cleared if these lines are shorted at startup
+// 25      C2                  Calibrate SW. 2 (input)
+// 24      C1                  Calibrate SW. 2: (output)
+//                             momentarily shorting these pins commences calibration
 // ***********************************************************************************
 //
 //
@@ -88,12 +88,12 @@
 //                     C1   | [ ]A1      /  A  \      D8[+] |   B0---------|9     |
 //                     C2   | [ ]A2      \  N  /      D7[+] |   D7---------|8     |
 //                     C3   | [ ]A3       \_0_/       D6[+]~|   D6---------|7     |
-//       EEPROM_CLEAR1 -----| [*]A4/SDA               D5[+]~|   D5---------|6     |
-//       EERPOM_CLEAR2 -----| [*]A5/SCL               D4[+] |   D4---------|5     |
-//                          | [ ]A6              INT1/D3[+]~|   D3---------|4     |
+//                          | [ ]A4/SDA               D5[+]~|   D5---------|6     |
+//       Calibrate Sw. 1 ---| [*]A5/SCL               D4[+] |   D4---------|5     |
+//       Calibrate Sw. 2 ---| [*]A6              INT1/D3[+]~|   D3---------|4     |
 //       pot-wiper ---------| [+]A7              INT0/D2[+] |   D2---------|3     |
-//       pot-HI -----+------| [+]5V                  GND[+] |     ---------|2     |
-//                   +------| [+]RST                 RST[+] |   C6---------|1     |
+//       pot-HI ------------| [+]5V                  GND[+] |     ---------|2     |
+//       pot-HI ------------| [+]RST                 RST[+] |   C6---------|1     |
 //       pot-LO ------------| [+]GND   5V MOSI GND   TX1[ ] |   D0         +------+
 //                          | [ ]Vin   [ ] [ ] [ ]   RX1[ ] |   D1
 //                          |          [ ] [ ] [ ]          |
@@ -103,8 +103,9 @@
 //
 //    Notes:
 //      1)  '+': Pin is connected
-//      2)  '*': Short these pins to reset the EEPROM potentiometer calibration
-//      3)  Note, RST and POT-HI are shorted together in the potentiometer cable
+//      2)  '*': Momentarily short these pins to calibrate the potentiometer, e.g.,
+//           with a pushbutton switch
+//      3)  Note, RST and POT-HI are both connected to the pot 5V terminal
 //
 //
 // Arduino Mini Pro pinout:
@@ -115,13 +116,13 @@
 //                               |  [ ]  [ ]  [ ]  [ ]  [ ]  [ ]  |
 //                               |              FTDI              |
 // Muligame 10-pin header    D1  | [ ]1/TX                 RAW[ ] |
-//        +------+           D0  | [ ]0/RX                 GND[+] |----------pot-LO
-//        |     1|-----------    | [+]RST        SCL/A5[ ] RST[+] |-----+
-//        |     2|-----------    | [+]GND        SDA/A4[ ] VCC[+] |-----+----pot-HI
-//        |     3|-----------D2  | [+]2/INT0    ___         A3[+] |----------pot-wiper
-//        |     4|-----------D3  |~[+]3/INT1   /   \        A2[ ] |   C2
-//        |     5|-----------D4  | [+]4       /PRO  \       A1[*] |----------EEPROM_CLEAR2
-//        |     6|-----------D5  |~[+]5       \ MINI/       A0[*] |----------EEPROM_CLEAR1
+//        +------+           D0  | [ ]0/RX                 GND[+] |-----pot-LO
+//        |     1|-----------    | [+]RST        SCL/A5[ ] RST[+] |-----pot-HI
+//        |     2|-----------    | [+]GND        SDA/A4[ ] VCC[+] |-----pot-HI
+//        |     3|-----------D2  | [+]2/INT0    ___         A3[+] |-----pot-wiper
+//        |     4|-----------D3  |~[+]3/INT1   /   \        A2[*] |-----Calibrate Sw. 1
+//        |     5|-----------D4  | [+]4       /PRO  \       A1[*] |-----Calibrate Sw. 2
+//        |     6|-----------D5  |~[+]5       \ MINI/       A0[ ] |
 //        |     7|-----------D6  |~[+]6        \___/    SCK/13[ ] |   B5
 //        |     8|-----------D7  | [+]7          A7[ ] MISO/12[ ] |   B4
 //        |     9|-----------B0  | [+]8          A6[ ] MOSI/11[ ]~|   B3
@@ -131,8 +132,9 @@
 //
 //    Notes:
 //      1)  '+': Pin is connected
-//      2)  '*': Short these pins to reset the EEPROM potentiometer calibration
-//      3)  Note, RST and POT-HI are shorted together in the potentiometer cable
+//      2)  '*': Momentarily short these pins to calibrate the potentiometer, e.g.,
+//           with a pushbutton switch
+//      3)  Note, RST and POT-HI are both connected to the pot 5V terminal
 //
 //
 #include <stdint.h>
@@ -145,12 +147,12 @@
 
 #if defined(NANO)
 #  define THRUST_PIN_DEF A7
-#  define EEPROM_CLEAR_1_DEF A4
-#  define EEPROM_CLEAR_2_DEF A5
+#  define EEPROM_CLEAR_1_DEF A5
+#  define EEPROM_CLEAR_2_DEF A6
 #elif defined(MINIPRO)
 #  define THRUST_PIN_DEF A3
-#  define EEPROM_CLEAR_1_DEF A0
-#  define EEPROM_CLEAR_2_DEF A1
+#  define EEPROM_CLEAR_1_DEF A1
+#  define EEPROM_CLEAR_2_DEF A2
 #else
 #  error No board selected
 #endif
