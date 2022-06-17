@@ -68,7 +68,9 @@ multigame 10-pin connector:
 |    12 (D9)    |   10 (D6)    |
 +---------------+--------------+
 
-4-pin Potentiometer cable:
+6-pin Potentiometer+calibrate button cable (mini pro)
+or
+4-pin potentiometer cable + 2 pin calibrate button cable (nano):
 
 +------------+--------------+-------------------------------+
 |Nano Pin    |Mini Pro Pin  |?Connected to:                 |
