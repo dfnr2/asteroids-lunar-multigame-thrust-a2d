@@ -2,7 +2,8 @@ Lunar Lander thrust controller A/D adapter
 ==========================================
 
 This project uses an Arduino nano or mini pro to interface a Lunar Lander thrust
-contrller to the Asteroids multigame Created by Scott Brasington (`Braze Technologies <https://www.brasington.org/arcade/products/adl/>`__)
+controller to the Asteroids multigame Created by Scott Brasington (`Braze
+Technologies <https://www.brasington.org/arcade/products/adl/>`__)
 
 It turns out that the nano and mini have a pinout that can directly plug into
 the 10-pin digital input connector on the Asteroids Multigame, so no special
@@ -11,7 +12,7 @@ adapter board or cable is needed. A cable is still needed for the potentiometer.
 This adapter can work with almost any potentiometer value, and almost any
 positioning of the potentiometer. The firmware will calibrate the analog values
 read from the potentiometer and map those values to the recommended range of
-values for the Lunar Landar game. To calibrate the thruster, simply short the
+values for the Lunar Lander game. To calibrate the thruster, simply short the
 two "calibration" I/O pins momentarily, then move the thruster through its range
 of motion. The highest and lowest values will automatically be stored in EEPROM,
 and will be mapped to the expected high/low thruster values until another
@@ -71,7 +72,7 @@ multigame 10-pin connector:
 
 +------------+--------------+-------------------------------+
 |Nano Pin    |Mini Pro Pin  |?Connected to:                 |
-+============+--------------+===============================+
++============+==============+===============================+
 |A5          |A1            |Calibrate switch pin 1         |
 +------------+--------------+-------------------------------+
 |A6          |A2            |Calibrate switch pin 2         |
