@@ -189,7 +189,9 @@ uint16_t hi_adc_val;
 
 // PROCEDURE: cal_sw_pressed
 // INPUTS: none
-// OUTPUTS: returns uint8_t, a boolean value that is true if the EEPROM jumper is shorted.
+//
+// OUTPUTS: returns uint8_t, a boolean value that is true if the Calibration
+// switch is pressed
 //
 // DESCRIPTION: See above
 //
@@ -199,13 +201,13 @@ uint16_t hi_adc_val;
 
 uint8_t cal_sw_pressed(void)
 {
-  uint8_t jumper_shorted = 0;
+  uint8_t sw_pressed = 0;
 
   digitalWrite(cal_button1, HIGH);
-  jumper_shorted = digitalRead(cal_button2);
+  sw_pressed = digitalRead(cal_button2);
 
   digitalWrite(cal_button1, LOW);
-  return jumper_shorted && !digitalRead(cal_button2);
+  return sw_pressed && !digitalRead(cal_button2);
 }
 
 // PROCEDURE: calibration_request
@@ -222,16 +224,13 @@ uint8_t cal_sw_pressed(void)
 // NOTES: See SIDE EFFECTS
 //
 // COMPLEXITY: 2
-
 uint8_t calibration_request(void)
 {
   uint8_t reset_request = 0;
 
-
-  // If the eeprom reset jumper is shorted, then wait until the short
-  // is removed, since if left in place, the adc value will repeatedly
-  // be written to EEPROM, serving no useful function, and shortening
-  // the EEPROM life.
+  // If the calibration button is pressed, then wait until released. Otherwise
+  // the adc value will repeatedly be written to EEPROM, serving no useful
+  // function, and shortening the EEPROM life.
   while (cal_sw_pressed()) {
     reset_request = 1;
     // visually indicate the reset request
@@ -251,7 +250,6 @@ uint8_t calibration_request(void)
 // SIDE EFFECTS: See above
 //
 // COMPLEXITY:  1
-
 void setup() {
   // Check if EEPROM reset is requested. Make sure the two CAL_BUTTON pins are
   // connected by testing that values written to the cal_button1 pin are read
@@ -283,7 +281,6 @@ void setup() {
 // NOTES:
 //
 // COMPLEXITY: 1
-
 void out_byte(uint8_t byte)
 {
   // swap each pair of bits to match POKEY:
@@ -318,7 +315,6 @@ void out_byte(uint8_t byte)
 // potentiometer values and mounting positions.
 //
 // COMPLEXITY: 3
-
 void store_hi_lo_val(uint16_t val)
 {
   if (val < lo_adc_val) {
@@ -343,9 +339,7 @@ void store_hi_lo_val(uint16_t val)
 // SIDE EFFECTS: See above
 //
 // COMPLEXITY: 2
-
 void loop(void) {
-
   // read the thruster every pass through the loop.
   uint16_t thrust_val = analogRead(thrust_pin);  // read the input pin
 
