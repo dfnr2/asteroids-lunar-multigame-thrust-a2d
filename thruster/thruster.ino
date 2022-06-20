@@ -142,8 +142,8 @@
 
 // Uncomment only one of the following two lines to configure for arduino nano
 // or mini pro:
-#define NANO 1
-//#define MINIPRO 1
+//#define NANO 1
+#define MINIPRO 1
 
 #if defined(NANO)
 #  define THRUST_PIN_DEF A7
@@ -151,8 +151,8 @@
 #  define CAL_BUTTON_2_DEF A5
 #elif defined(MINIPRO)
 #  define THRUST_PIN_DEF A3
-#  define CAL_BUTTON_1_DEF A1
-#  define CAL_BUTTON_2_DEF A2
+#  define CAL_BUTTON_1_DEF A0
+#  define CAL_BUTTON_2_DEF A1
 #else
 #  error No board selected
 #endif
@@ -226,18 +226,18 @@ uint8_t cal_sw_pressed(void)
 // COMPLEXITY: 2
 uint8_t calibration_request(void)
 {
-  uint8_t reset_request = 0;
+  uint8_t resrequest = 0;
 
   // If the calibration button is pressed, then wait until released. Otherwise
   // the adc value will repeatedly be written to EEPROM, serving no useful
   // function, and shortening the EEPROM life.
   while (cal_sw_pressed()) {
-    reset_request = 1;
+    calibrate_request = 1;
     // visually indicate the reset request
     digitalWrite(LED_BUILTIN, HIGH);
   }
   digitalWrite(LED_BUILTIN, LOW);
-  return reset_request;
+  return calibrate_request;
 }
 
 
