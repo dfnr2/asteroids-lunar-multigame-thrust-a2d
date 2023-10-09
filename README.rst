@@ -98,12 +98,18 @@ Assembly:
 
 2) Desolder or clip off the red reset button.  You won't need it.
 
-3) Program the arduino using the .ino file in this repository. You can program
-   the nano pro with a USB cable. For the mini, you will need a USB-to-TTL
-   adapter. I have found that you can slide the pins on the USB-TTL adapter
-   directly into the row of 6 holes at the bottom end of the PCB, tilt them and
-   apply a little pressure to make contact, and then program the mini without
-   extra cables or flying wires.
+3) Program the arduino using the .ino file in this repository.
+   - Edit the program to Select the mini pro or the nano by uncommenting
+     ``#define NANO 1` if you have a nano, or `#define MINIPRO 1` if you have a
+     mini pro.
+
+   - compile and program the arduino using the arduino IDE.
+
+   - You can program the nano pro with a USB cable. For the mini, you will need
+     a USB-to-TTL adapter. I have found that you can slide the pins on the
+     USB-TTL adapter directly into the row of 6 holes at the bottom end of the
+     PCB, tilt them and apply a little pressure to make contact, and then
+     program the mini without extra cables or flying wires.
 
 4) Make the potentiometer and calibration switch as in the diagram. Correct
    wiring is important to ensure power to the nano. Note that you can use almost
