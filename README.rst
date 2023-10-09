@@ -100,8 +100,10 @@ Assembly:
 
 3) Program the arduino using the .ino file in this repository.
    - Edit the program to Select the mini pro or the nano by uncommenting
-     ``#define NANO 1` if you have a nano, or `#define MINIPRO 1` if you have a
-     mini pro.
+     ```#define NANO 1```
+     if you have a nano, or
+     ```#define MINIPRO 1```
+     if you have a mini pro.
 
    - compile and program the arduino using the arduino IDE.
 
