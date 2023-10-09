@@ -36,7 +36,7 @@ the device will not be damaged.
 
 Wiring:
 
-.. image:: wiring.png
+.. Image:: wiring.png
    :scale: 50%
    :alt: Wiring diagram for Arduino A/D interface.
 
@@ -87,6 +87,42 @@ or
 +------------+--------------+-------------------------------+
 |GND         |GND           |Potentiometer Low side         |
 +------------+--------------+-------------------------------+
+
+
+Assembly:
+
+1) The Arduino kit should come with some breakaway headers. Break off a 10-pin
+   segment to plug into the multigame, and either a 6-pin segment (for the mini)
+   or a 2-pin segment and a 4-pin segment (for the nano pro), and solder them
+   into place using the tables above.
+
+2) Desolder or clip off the red reset button.  You won't need it.
+
+3) Program the arduino using the .ino file in this repository. You can program
+   the nano pro with a USB cable. For the mini, you will need a USB-to-TTL
+   adapter. I have found that you can slide the pins on the USB-TTL adapter
+   directly into the row of 6 holes at the bottom end of the PCB, tilt them and
+   apply a little pressure to make contact, and then program the mini without
+   extra cables or flying wires.
+
+4) Make the potentiometer and calibration switch as in the diagram. Correct
+   wiring is important to ensure power to the nano. Note that you can use almost
+   any linear potentiometer value you like. The thrusters come with 5K and 10K
+   pots, but 2K or 20K will work as well, if you are making your own thruster or
+   rebuilding one.
+
+5) Plug in and enjoy. No calibration needed. After the thruster is moved through
+   the full range of motion once, the thruster is fully calibrated, and the
+   calibration constants are stored in EEPROM.
+
+.. Image:: mini-pin-position.png
+   :scale: 50%
+   :alt: Connector positions for the mini
+
+.. Image:: mini-in-circuit.png
+   :scale: 50%
+   :alt: The mini plugged into the multi-game adapter
+
 
 A simulation running the arduino software has been set up on Wokwi.com:
 
