@@ -105,7 +105,7 @@ Assembly:
 
      if you have a nano, or
 
-     ```#define MINIPRO 1``
+     ``#define MINIPRO 1``
 
      if you have a mini pro.
 
