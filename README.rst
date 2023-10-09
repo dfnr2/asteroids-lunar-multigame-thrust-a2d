@@ -115,7 +115,7 @@ Assembly:
    the full range of motion once, the thruster is fully calibrated, and the
    calibration constants are stored in EEPROM.
 
-.. Image:: mini-pin-position.png
+.. Image:: mini-pin-positions.png
    :scale: 50%
    :alt: Connector positions for the mini
 
